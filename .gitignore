@@ -1,0 +1,6 @@
+lexer
+*.swp
+.vscode
+.out
+.o
+
