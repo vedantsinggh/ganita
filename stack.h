@@ -3,13 +3,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-enum OP_CODE {
-	PLUS,
-	MINUS,
-	DIVIDE,
-	MUL
-};
-
 enum OP_TYPE {
 	LITERAL=0,
 	COMMAND,

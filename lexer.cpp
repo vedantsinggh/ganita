@@ -11,6 +11,14 @@
 #define println(x) std::cout<<x<<std::endl
 #define printerr(x) std::cerr<<x<<std::endl
 
+enum OP_CODE {
+	PLUS,
+	MINUS,
+	DIVIDE,
+	MUL,
+	PRINT
+};
+
 OP tokenize(std::string token){
 	int tokenValue;
 	OP_TYPE type = COMMAND;
@@ -22,6 +30,8 @@ OP tokenize(std::string token){
 		tokenValue = MUL;
 	}else if (token == "/"){
 		tokenValue = DIVIDE;
+	}else if (token == "."){
+		tokenValue = PRINT;
 	}else{
 		tokenValue = std::stoi(token);
 		type  = LITERAL;
@@ -65,7 +75,7 @@ void execute(Stack program){
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
 						OP op{
-							.type =literal,	
+							.type =LITERAL,	
 							.value = a+b	
 						};
 						exect.push(op);
@@ -76,7 +86,7 @@ void execute(Stack program){
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
 						OP op{
-							.type =literal,	
+							.type =LITERAL,	
 							.value = a-b	
 						};
 						exect.push(op);
@@ -87,7 +97,7 @@ void execute(Stack program){
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
 						OP op{
-							.type =literal,	
+							.type =LITERAL,	
 							.value = b/a	
 						};
 						exect.push(op);
@@ -98,12 +108,19 @@ void execute(Stack program){
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
 						OP op{
-							.type =literal,	
+							.type =LITERAL,	
 							.value = a*b	
 						};
 						exect.push(op);
 						break;
 					}
+				case PRINT:
+					{
+						int a = (exect.pop()).value;
+						println(a);
+						break;
+					}
+				
 				default:
 					printp("Invalid Command");
 					exit(1);
@@ -111,7 +128,6 @@ void execute(Stack program){
 			}	
 		}
 	}
-	exect.print();
 }
 
 int main(int argc, char* argv[]){
