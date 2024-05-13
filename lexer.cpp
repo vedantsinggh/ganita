@@ -71,8 +71,42 @@ void execute(Stack program){
 						exect.push(op);
 						break;
 					}
+				case minus:
+					{
+						int a = (exect.pop()).value;
+						int b = (exect.pop()).value;
+						OP op{
+							.type =literal,	
+							.value = a-b	
+						};
+						exect.push(op);
+						break;
+					}
+				case divide:
+					{
+						int a = (exect.pop()).value;
+						int b = (exect.pop()).value;
+						OP op{
+							.type =literal,	
+							.value = b/a	
+						};
+						exect.push(op);
+						break;
+					}
+				case mul:
+					{
+						int a = (exect.pop()).value;
+						int b = (exect.pop()).value;
+						OP op{
+							.type =literal,	
+							.value = a*b	
+						};
+						exect.push(op);
+						break;
+					}
 				default:
-					printp("Kuch toh chod diya raju!");
+					printp("Invalid Command");
+					exit(1);
 					break;
 			}	
 		}
