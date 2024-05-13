@@ -4,15 +4,15 @@
 #define STACK_H
 
 enum OP_CODE {
-	plus,
-	minus,
-	divide,
-	mul
+	PLUS,
+	MINUS,
+	DIVIDE,
+	MUL
 };
 
 enum OP_TYPE {
-	literal=0,
-	command,
+	LITERAL=0,
+	COMMAND,
 };
 
 struct OP{

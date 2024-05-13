@@ -13,18 +13,18 @@
 
 OP tokenize(std::string token){
 	int tokenValue;
-	OP_TYPE type = command;
+	OP_TYPE type = COMMAND;
 	      if (token == "+"){
-		tokenValue = plus;
+		tokenValue = PLUS;
 	}else if (token == "-"){
-		tokenValue = minus;
+		tokenValue = MINUS;
 	}else if (token == "*"){
-		tokenValue = mul;
+		tokenValue = MUL;
 	}else if (token == "/"){
-		tokenValue = divide;
+		tokenValue = DIVIDE;
 	}else{
 		tokenValue = std::stoi(token);
-		type  = literal;
+		type  = LITERAL;
 	}
 	OP op{
 		.type = type,
@@ -55,12 +55,12 @@ std::vector<OP> lexLine(std::string line){
 void execute(Stack program){
 	Stack exect;
 	for(int i=0; i < program.count; i++){
-		if (program.ops[i].type == literal){;
+		if (program.ops[i].type == LITERAL){;
 			exect.push(program.ops[i]);
 		}
-		if (program.ops[i].type == command){
+		if (program.ops[i].type == COMMAND){
 			switch(program.ops[i].value){
-				case plus:
+				case PLUS:
 					{
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
@@ -71,7 +71,7 @@ void execute(Stack program){
 						exect.push(op);
 						break;
 					}
-				case minus:
+				case MINUS:
 					{
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
@@ -82,7 +82,7 @@ void execute(Stack program){
 						exect.push(op);
 						break;
 					}
-				case divide:
+				case DIVIDE:
 					{
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
@@ -93,7 +93,7 @@ void execute(Stack program){
 						exect.push(op);
 						break;
 					}
-				case mul:
+				case MUL:
 					{
 						int a = (exect.pop()).value;
 						int b = (exect.pop()).value;
