@@ -75,7 +75,7 @@ Token parse(std::string token, int row, int col){
 			t.type  = LITERAL;
 		}
 		else {
-			printerr("Unknown token at line(" << row << "," << col<< ")");
+			printerr("Unknown token at line(" << row + 1 << "," << col - 1<< ")");
 			exit(1);
 		}
 	}

@@ -1,4 +1,5 @@
 ganita
+lexer
 *.swp
 .vscode
 .out
