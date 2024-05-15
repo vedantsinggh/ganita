@@ -4,12 +4,43 @@
 #include <vector>
 #include <string>
 
-#define STACK_IMPLEMENTATION
-#include "stack.h"
-
 #define printp(x) std::cout<<x
 #define println(x) std::cout<<x<<std::endl
 #define printerr(x) std::cerr<<x<<std::endl
+
+enum OP_TYPE {
+	LITERAL=0,
+	COMMAND,
+};
+
+struct OP{
+	OP_TYPE type;
+	int value;	
+};
+
+class Stack{
+public:
+	OP ops[1024];
+	int count;
+	
+	Stack(){
+		count = 0;
+	}
+	int push(OP op){
+		ops[count] = op;
+		return count++;
+	}
+
+	void print(){
+		for(int i=0; i < count; i++){
+			std::cout << ops[i].type << " " << ops[i].value << std::endl;
+		}
+	}
+
+	OP pop(){
+		return ops[--count];
+	}
+};
 
 enum OP_CODE {
 	PLUS,
@@ -19,11 +50,12 @@ enum OP_CODE {
 	PRINT,
 	DUP,
 	DUP2,
+	EQUAL,
 	COUNT
 };
 
 OP tokenize(std::string token){
-	assert(COUNT == 7 && "Mismatching number of command in tokenize()");
+	assert(COUNT == 8 && "Mismatching number of command in tokenize()");
 	int tokenValue;
 	OP_TYPE type = COMMAND;
 	      if (token == "+"){
@@ -40,6 +72,8 @@ OP tokenize(std::string token){
 		tokenValue = DUP;
 	}else if (token == "2DUP"){
 		tokenValue = DUP2;
+	}else if (token == "="){
+		tokenValue = EQUAL;
 	}else{
 		tokenValue = std::stoi(token);
 		type  = LITERAL;
@@ -77,7 +111,7 @@ void execute(Stack program){
 			exect.push(program.ops[i]);
 		}
 		if (program.ops[i].type == COMMAND){
-			assert(COUNT == 7 && "Mismatching number of command in execute()");
+			assert(COUNT == 8 && "Mismatching number of command in execute()");
 			switch(program.ops[i].value){
 				case PLUS:
 					{
@@ -168,6 +202,15 @@ void execute(Stack program){
 							.value = a
 						};
 						exect.push(op3);
+						break;
+					}
+				case EQUAL:
+					{
+						int a = (exect.pop()).value;
+						int b = (exect.pop()).value;
+						int c = a == b;
+						OP op{.type = LITERAL, .value = c};
+						exect.push(op);
 						break;
 					}
 				default:
