@@ -16,10 +16,14 @@ enum OP_CODE {
 	MINUS,
 	DIVIDE,
 	MUL,
-	PRINT
+	PRINT,
+	DUP,
+	DUP2,
+	COUNT
 };
 
 OP tokenize(std::string token){
+	assert(COUNT == 7 && "Mismatching number of command in tokenize()");
 	int tokenValue;
 	OP_TYPE type = COMMAND;
 	      if (token == "+"){
@@ -30,8 +34,12 @@ OP tokenize(std::string token){
 		tokenValue = MUL;
 	}else if (token == "/"){
 		tokenValue = DIVIDE;
-	}else if (token == "."){
+	}else if (token == "PRINT"){
 		tokenValue = PRINT;
+	}else if (token == "DUP"){
+		tokenValue = DUP;
+	}else if (token == "2DUP"){
+		tokenValue = DUP2;
 	}else{
 		tokenValue = std::stoi(token);
 		type  = LITERAL;
@@ -69,6 +77,7 @@ void execute(Stack program){
 			exect.push(program.ops[i]);
 		}
 		if (program.ops[i].type == COMMAND){
+			assert(COUNT == 7 && "Mismatching number of command in execute()");
 			switch(program.ops[i].value){
 				case PLUS:
 					{
@@ -120,7 +129,47 @@ void execute(Stack program){
 						println(a);
 						break;
 					}
-				
+				case DUP:
+					{
+						int a = (exect.pop()).value;
+						OP op{
+							.type =LITERAL,	
+							.value = a	
+						};
+						exect.push(op);
+						OP op1{
+							.type =LITERAL,	
+							.value = a
+						};
+						exect.push(op1);
+						break;
+					}
+				case DUP2:
+					{
+						int a = (exect.pop()).value;
+						int b = (exect.pop()).value;
+						OP op{
+							.type =LITERAL,	
+							.value = b	
+						};
+						exect.push(op);
+						OP op1{
+							.type =LITERAL,	
+							.value = a
+						};
+						exect.push(op1);
+						OP op2{
+							.type =LITERAL,	
+							.value = b	
+						};
+						exect.push(op2);
+						OP op3{
+							.type =LITERAL,	
+							.value = a
+						};
+						exect.push(op3);
+						break;
+					}
 				default:
 					printp("Invalid Command");
 					exit(1);
