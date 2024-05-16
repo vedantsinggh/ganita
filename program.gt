@@ -1,6 +1,5 @@
-2 2 = IF 
-	1 IF
-		35 PRINT
-	END
-	69 PRINT
+10 WHILE DUP 0 > DO
+	DUP 2 % 0 NOT = IF DUP PRINT END
+	1 -
 END
+

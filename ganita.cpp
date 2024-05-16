@@ -18,12 +18,19 @@ enum OP_CODE {
 	MINUS,
 	DIVIDE,
 	MUL,
+	MOD,
+	NOT,
 	PRINT,
 	DUP,
 	DUP2,
 	EQUAL,
 	IFF,	
+	ELCE,
 	END,
+	WILE,
+	DO,
+	GT,
+	ST,
 	COUNT // used to count total number of operation introduced to exhaust all switch cases
 };
 
@@ -45,8 +52,11 @@ bool isValid(std::string& str)
 	return true; 
 }
 
+//TODO: check whether any un-IF ELSE or un-IF END is present and throw valid error
+//TODO: check whether WHILE has DO and END statements and if not throw valid error
+//Cross-references keywords that require jump in code like IF ELSE WHILE etc
 int crossrefIndice(std::vector<Token>& program){
-	assert(COUNT == 10 && "Mismatching number of keyword in crossrefIndices()");
+	assert(COUNT == 17 && "Mismatching number of keyword in crossrefIndices()");
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		switch(token.value){
@@ -54,12 +64,12 @@ int crossrefIndice(std::vector<Token>& program){
 			{	
 				int index = i + 1;
 				bool flag = false;
-				int bCounter = 0; //counts number of nested IF blocks to leave to find respective END
+				int bCounter = 0; //counts number of nested IF blocks to leave to find respective END or ELSE
 				while(index < (int)program.size()){
 					OP_TYPE type = program[index].type;
 					if (type == KEYWORD){
 						OP_CODE value = (OP_CODE)program[index].value;
-						if (value == END && bCounter == 0){
+						if ((value == END || value == ELCE) && bCounter == 0){
 							program[i].data[0] = index;
 							flag = true;
 							break;
@@ -76,7 +86,98 @@ int crossrefIndice(std::vector<Token>& program){
 					index++;
 				}
 				if(!flag){
-					printerr("IF block should always end with END!");
+					printerr("IF block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1 << "0");
+					exit(1);
+				}
+				break;
+			}
+			case ELCE:
+			{
+			
+				int index = i + 1;
+				bool flag = false;
+				int bCounter = 0; //counts number of nested ELSE blocks to leave to find respective END
+				while(index < (int)program.size()){
+					OP_TYPE type = program[index].type;
+					if (type == KEYWORD){
+						OP_CODE value = (OP_CODE)program[index].value;
+						if (value == END && bCounter == 0){
+							program[i].data[0] = index;
+							flag = true;
+							break;
+						}
+						else {
+							if(value == IFF || value == ELCE){
+								bCounter++;	
+							}
+							if(value == END){
+								bCounter--;
+							}
+						}
+					}
+					index++;
+				}
+				if(!flag){
+					printerr("ELSE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< "0");
+					exit(1);
+				}
+				break;
+			}
+			case END:
+			{
+				
+				int index = i - 1;
+				bool flag = false;
+				int bCounter = 0; //counts number of nested IF/WHILE blocks to leave to find respective respective while
+				while(index >= 0){
+					OP_TYPE type = program[index].type;
+					if (type == KEYWORD){
+						OP_CODE value = (OP_CODE)program[index].value;
+						if (value == WILE && bCounter == 0){
+							program[i].data[0] = index;
+							flag = true;
+							break;
+						}
+						else {
+							if(value == IFF || value == WILE){
+								bCounter++;	
+							}
+							if(value == END){
+								bCounter--;
+							}
+						}
+					}
+					index--;
+				}
+				break;
+			}
+			case DO:
+			{
+				int index = i + 1;
+				bool flag = false;
+				int bCounter = 0; //counts number of nested IF/WHILE blocks to leave to find respective END
+				while(index < (int)program.size()){
+					OP_TYPE type = program[index].type;
+					if (type == KEYWORD){
+						OP_CODE value = (OP_CODE)program[index].value;
+						if (value == END && bCounter == 0){
+							program[i].data[0] = index;
+							flag = true;
+							break;
+						}
+						else {
+							if(value == IFF || value == WILE){
+								bCounter++;	
+							}
+							if(value == END){
+								bCounter--;
+							}
+						}
+					}
+					index++;
+				}
+				if(!flag){
+					printerr("WHILE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< "0");
 					exit(1);
 				}
 				break;
@@ -88,14 +189,15 @@ int crossrefIndice(std::vector<Token>& program){
 	}
 	return 0;
 }
+
 Token parse(std::string token, int row, int col){
-	assert(COUNT == 10 && "Mismatching number of keyword in tokenize()");
+	assert(COUNT == 17 && "Mismatching number of keyword in tokenize()");
 
 	Token t = {
 		.value = -1,
 		.position = {row, col},
 		.type = KEYWORD,
-		.data = {0}	
+		.data = {-1} // -1 indicates that this data is not being used
 	};
 	
 	      if (token == "+"){
@@ -106,6 +208,10 @@ Token parse(std::string token, int row, int col){
 		t.value = MUL;
 	}else if (token == "/"){
 		t.value = DIVIDE;
+	}else if (token == "%"){
+		t.value = MOD;
+	}else if (token == "NOT"){
+		t.value = NOT;
 	}else if (token == "PRINT"){
 		t.value = PRINT;
 	}else if (token == "DUP"){
@@ -118,6 +224,16 @@ Token parse(std::string token, int row, int col){
 		t.value = IFF;
 	}else if (token == "END"){
 		t.value = END;
+	}else if (token == "ELSE"){
+		t.value = ELCE;
+	}else if (token == "WHILE"){
+		t.value = WILE;
+	}else if (token == "DO"){
+		t.value = DO;
+	}else if (token == ">"){
+		t.value = GT;
+	}else if (token == "<"){
+		t.value = ST;
 	}else{
 		if (isValid(token)){
 			t.value = std::stoi(token);
@@ -165,7 +281,7 @@ void execute(std::vector<Token> program){
 			exect.push_back(token.value);
 		}
 		if (token.type == KEYWORD){
-			assert(COUNT == 10 && "Mismatching number of keyword in execute()");
+			assert(COUNT == 17 && "Mismatching number of keyword in execute()");
 			switch(token.value){
 				case PLUS:
 					{
@@ -193,6 +309,19 @@ void execute(std::vector<Token> program){
 						int a = pop(exect);
 						int b = pop(exect);
 						exect.push_back(b * a);
+						break;
+					}
+				case MOD:
+					{
+						int a = pop(exect);
+						int b = pop(exect);
+						exect.push_back(b % a);
+						break;
+					}
+				case NOT:
+					{
+						int a = pop(exect);
+						exect.push_back(!a);
 						break;
 					}
 				case PRINT:
@@ -229,17 +358,53 @@ void execute(std::vector<Token> program){
 					{
 						int a = pop(exect);
 						if (!a){
-							i = token.data[0] - 1;
+							i = token.data[0]; // It shifts pointer to next line of ELSE or END block
 							
 						}
 						break;
 					}
 				case END:
 					{
+						if (token.data[0] >= 0){
+							i = token.data[0] - 1; // shifts pointer to WHILE
+						}
+						break;
+					}
+				case ELCE:
+					{	
+						i = token.data[0]; // it shifts pointer to next line of END block
+						break;
+					}
+				case DO:
+					{
+						int a = pop(exect);
+						if (!a){
+							i = token.data[0]; // shifts pointer to next line of END block
+						}
+						break;
+					}
+				case WILE:
+					{
+						break;
+					}
+				case GT:
+					{
+
+						int a = pop(exect);
+						int b = pop(exect);
+						exect.push_back(b > a);
+						break;
+					}
+				case ST:
+					{
+
+						int a = pop(exect);
+						int b = pop(exect);
+						exect.push_back(b < a);
 						break;
 					}
 				default:
-					printp("Invalid Command");
+					assert(false && "Undeteced invalid token found!");
 					exit(1);
 					break;
 			}	
@@ -270,6 +435,13 @@ int main(int argc, char* argv[]){
 	}
 
 	crossrefIndice(program);
+	
+/* To visualize all tokens and thier data
+	for (Token t : program){
+		println(t.type << "," << t.value << "," << t.data[0]);
+	}
+*/
+
 	execute(program);
 }
 
