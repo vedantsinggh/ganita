@@ -22,6 +22,8 @@ enum OP_CODE {
 	DUP,
 	DUP2,
 	EQUAL,
+	IFF,	
+	END,
 	COUNT // used to count total number of operation introduced to exhaust all switch cases
 };
 
@@ -43,8 +45,51 @@ bool isValid(std::string& str)
 	return true; 
 }
 
+int crossrefIndice(std::vector<Token>& program){
+	assert(COUNT == 10 && "Mismatching number of keyword in crossrefIndices()");
+	for(int i=0; i < (int)program.size(); i++){
+		Token token = program[i];
+		switch(token.value){
+			case IFF:
+			{	
+				int index = i + 1;
+				bool flag = false;
+				int bCounter = 0; //counts number of nested IF blocks to leave to find respective END
+				while(index < (int)program.size()){
+					OP_TYPE type = program[index].type;
+					if (type == KEYWORD){
+						OP_CODE value = (OP_CODE)program[index].value;
+						if (value == END && bCounter == 0){
+							program[i].data[0] = index;
+							flag = true;
+							break;
+						}
+						else {
+							if(value == IFF){
+								bCounter++;	
+							}
+							if(value == END){
+								bCounter--;
+							}
+						}
+					}
+					index++;
+				}
+				if(!flag){
+					printerr("IF block should always end with END!");
+					exit(1);
+				}
+				break;
+			}
+			default:
+			{
+			}
+		}
+	}
+	return 0;
+}
 Token parse(std::string token, int row, int col){
-	assert(COUNT == 8 && "Mismatching number of keyword in tokenize()");
+	assert(COUNT == 10 && "Mismatching number of keyword in tokenize()");
 
 	Token t = {
 		.value = -1,
@@ -69,6 +114,10 @@ Token parse(std::string token, int row, int col){
 		t.value = DUP2;
 	}else if (token == "="){
 		t.value = EQUAL;
+	}else if (token == "IF"){
+		t.value = IFF;
+	}else if (token == "END"){
+		t.value = END;
 	}else{
 		if (isValid(token)){
 			t.value = std::stoi(token);
@@ -116,7 +165,7 @@ void execute(std::vector<Token> program){
 			exect.push_back(token.value);
 		}
 		if (token.type == KEYWORD){
-			assert(COUNT == 8 && "Mismatching number of keyword in execute()");
+			assert(COUNT == 10 && "Mismatching number of keyword in execute()");
 			switch(token.value){
 				case PLUS:
 					{
@@ -176,6 +225,19 @@ void execute(std::vector<Token> program){
 						exect.push_back(a == b);
 						break;
 					}
+				case IFF:
+					{
+						int a = pop(exect);
+						if (!a){
+							i = token.data[0] - 1;
+							
+						}
+						break;
+					}
+				case END:
+					{
+						break;
+					}
 				default:
 					printp("Invalid Command");
 					exit(1);
@@ -206,6 +268,8 @@ int main(int argc, char* argv[]){
 		}
 		row++;
 	}
+
+	crossrefIndice(program);
 	execute(program);
 }
 

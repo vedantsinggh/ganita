@@ -1,2 +1,6 @@
-2 2 as
-= PRINT
+2 2 = IF 
+	1 IF
+		35 PRINT
+	END
+	69 PRINT
+END
