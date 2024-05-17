@@ -14,23 +14,30 @@ enum OP_TYPE {
 };
 
 enum OP_CODE {
+
 	PLUS,
 	MINUS,
 	DIVIDE,
 	MUL,
 	MOD,
+
+	GT,
+	ST,
+	EQUAL,
+
 	NOT,
+	//TODO: implement AND and OR
+
 	PRINT,
 	DUP,
 	DUP2,
-	EQUAL,
+
 	IFF,	
 	ELCE,
-	END,
 	WILE,
 	DO,
-	GT,
-	ST,
+	END,
+
 	COUNT // used to count total number of operation introduced to exhaust all switch cases
 };
 
@@ -177,7 +184,7 @@ int crossrefIndice(std::vector<Token>& program){
 					index++;
 				}
 				if(!flag){
-					printerr("WHILE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< "0");
+					printerr("WHILE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< ")");
 					exit(1);
 				}
 				break;
@@ -258,6 +265,9 @@ std::vector<Token> parseLine(std::string line, int row){
 			if (!token.size() > 0){
 				continue;
 			}
+			if (token.rfind("//", 0) == 0){
+				return tokens;	
+			}
 			tokens.push_back(parse(token, row, i));
 			token = "";
 			continue;
@@ -274,89 +284,92 @@ int pop(std::vector<int>& program){
 }
 
 void execute(std::vector<Token> program){
-	std::vector<int> exect;
+
+	assert(COUNT == 17 && "Mismatching number of keyword in execute()");
+
+	std::vector<int> memory;
+
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		if (token.type == LITERAL){;
-			exect.push_back(token.value);
+			memory.push_back(token.value);
 		}
 		if (token.type == KEYWORD){
-			assert(COUNT == 17 && "Mismatching number of keyword in execute()");
 			switch(token.value){
 				case PLUS:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(a + b);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(a + b);
 						break;
 					}
 				case MINUS:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b - a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b - a);
 						break;
 					}
 				case DIVIDE:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b/a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b/a);
 						break;
 					}
 				case MUL:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b * a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b * a);
 						break;
 					}
 				case MOD:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b % a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b % a);
 						break;
 					}
 				case NOT:
 					{
-						int a = pop(exect);
-						exect.push_back(!a);
+						int a = pop(memory);
+						memory.push_back(!a);
 						break;
 					}
 				case PRINT:
 					{
-						int a = pop(exect);
+						int a = pop(memory);
 						println(a);
 						break;
 					}
 				case DUP:
 					{
-						int a = pop(exect);
-						exect.push_back(a);
-						exect.push_back(a);
+						int a = pop(memory);
+						memory.push_back(a);
+						memory.push_back(a);
 						break;
 					}
 				case DUP2:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b);
-						exect.push_back(a);
-						exect.push_back(b);
-						exect.push_back(a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b);
+						memory.push_back(a);
+						memory.push_back(b);
+						memory.push_back(a);
 						break;
 					}
 				case EQUAL:
 					{
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(a == b);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(a == b);
 						break;
 					}
 				case IFF:
 					{
-						int a = pop(exect);
+						int a = pop(memory);
 						if (!a){
 							i = token.data[0]; // It shifts pointer to next line of ELSE or END block
 							
@@ -377,7 +390,7 @@ void execute(std::vector<Token> program){
 					}
 				case DO:
 					{
-						int a = pop(exect);
+						int a = pop(memory);
 						if (!a){
 							i = token.data[0]; // shifts pointer to next line of END block
 						}
@@ -390,17 +403,17 @@ void execute(std::vector<Token> program){
 				case GT:
 					{
 
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b > a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b > a);
 						break;
 					}
 				case ST:
 					{
 
-						int a = pop(exect);
-						int b = pop(exect);
-						exect.push_back(b < a);
+						int a = pop(memory);
+						int b = pop(memory);
+						memory.push_back(b < a);
 						break;
 					}
 				default:
