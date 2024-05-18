@@ -8,30 +8,66 @@
 #define println(x) std::cout<<x<<std::endl
 #define printerr(x) std::cerr<<x<<std::endl
 
+/*  --------- INTERPRETER AND COMPILER DOCUMENTATION ---------
+ *  
+ *  We have a variable program that stores whole program as vector of tokens
+ *
+ *  Token holds whole data of token
+ *  	.value	   : it stores value of literal or OP_CODE in case of keyword
+ *	.type      : it stores type of token
+ *	.position  : it stores the location of first charactor of keyword. it is used to throw compile time error
+ *	.data	   : it stores any data required by any keyword:
+ *			for IF     : data[0] holds position of it's repective ELSE block(or END block in case there is no ELSE block)
+ *			for ELSE   : data[0] holds position of it's repective END block
+ *			for WHILE  : data[0] holds position of it's repective END block
+ *			for END    : data[0] holds position of WHILE block only.
+ *
+ *
+ *	How Do We Branch?
+ *		IF of the condition it true then it continues its exectution linearly but if the condition is false it jumps to next line of either ELSE or END.
+ *		ELSE it always jumps the exectution to next line of END block.
+ *		END in conditional branching is always used as marker. It has not functionality.
+ *
+ *	How Do We Loop?
+ *		WHILE is always used as mark from where the looping begins .
+ *		DO check the last bit to be either true or false. In case of true it continues the linear execttion otherwise it jumps the exectution to next line of END.
+ *		END always jumps exection to while loop thus infering re-evaluttion of condition forming a condtional loop.
+ *
+ * */
+
+
+// It is used to define type of token pushed onto the stack
 enum OP_TYPE {
 	LITERAL,
 	KEYWORD
 };
 
+// This defines all possible keywords
 enum OP_CODE {
 
+	// arithematic operations
 	PLUS,
 	MINUS,
 	DIVIDE,
 	MUL,
 	MOD,
 
+	// comparsion operations
 	GT,
 	ST,
 	EQUAL,
 
+	// logical operations
 	NOT,
 	//TODO: implement AND and OR
 
-	PRINT,
-	DUP,
-	DUP2,
 
+	// other operations
+	PRINT, // pops the last element and prints it to the console
+	DUP, // copies last element onto the stack
+	DUP2, // copies last two element onto the stack
+
+	// condtional and looping operations
 	IFF,	
 	ELCE,
 	WILE,
@@ -41,6 +77,7 @@ enum OP_CODE {
 	COUNT // used to count total number of operation introduced to exhaust all switch cases
 };
 
+// it represents every kind of valid word that would be coded in the program. Currently it could be either a number[OP_TYPE  = literal] that should be pushed onto the stack or a operation [OP_TYPE = KEYWORD]
 struct Token {
 	int value;
 	int position[2]; // store location of first charactor of the token in [row, column]
@@ -61,7 +98,9 @@ bool isValid(std::string& str)
 
 //TODO: check whether any un-IF ELSE or un-IF END is present and throw valid error
 //TODO: check whether WHILE has DO and END statements and if not throw valid error
-//Cross-references keywords that require jump in code like IF ELSE WHILE etc
+
+//Cross-references keywords that require jump in code like IF ELSE WHILE etc and stors them in .data section of respective token
+
 int crossrefIndice(std::vector<Token>& program){
 	assert(COUNT == 17 && "Mismatching number of keyword in crossrefIndices()");
 	for(int i=0; i < (int)program.size(); i++){
@@ -287,89 +326,89 @@ void execute(std::vector<Token> program){
 
 	assert(COUNT == 17 && "Mismatching number of keyword in execute()");
 
-	std::vector<int> memory;
+	std::vector<int> stack;
 
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		if (token.type == LITERAL){;
-			memory.push_back(token.value);
+			stack.push_back(token.value);
 		}
 		if (token.type == KEYWORD){
 			switch(token.value){
 				case PLUS:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(a + b);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(a + b);
 						break;
 					}
 				case MINUS:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b - a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b - a);
 						break;
 					}
 				case DIVIDE:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b/a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b/a);
 						break;
 					}
 				case MUL:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b * a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b * a);
 						break;
 					}
 				case MOD:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b % a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b % a);
 						break;
 					}
 				case NOT:
 					{
-						int a = pop(memory);
-						memory.push_back(!a);
+						int a = pop(stack);
+						stack.push_back(!a);
 						break;
 					}
 				case PRINT:
 					{
-						int a = pop(memory);
+						int a = pop(stack);
 						println(a);
 						break;
 					}
 				case DUP:
 					{
-						int a = pop(memory);
-						memory.push_back(a);
-						memory.push_back(a);
+						int a = pop(stack);
+						stack.push_back(a);
+						stack.push_back(a);
 						break;
 					}
 				case DUP2:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b);
-						memory.push_back(a);
-						memory.push_back(b);
-						memory.push_back(a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b);
+						stack.push_back(a);
+						stack.push_back(b);
+						stack.push_back(a);
 						break;
 					}
 				case EQUAL:
 					{
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(a == b);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(a == b);
 						break;
 					}
 				case IFF:
 					{
-						int a = pop(memory);
+						int a = pop(stack);
 						if (!a){
 							i = token.data[0]; // It shifts pointer to next line of ELSE or END block
 							
@@ -390,7 +429,7 @@ void execute(std::vector<Token> program){
 					}
 				case DO:
 					{
-						int a = pop(memory);
+						int a = pop(stack);
 						if (!a){
 							i = token.data[0]; // shifts pointer to next line of END block
 						}
@@ -403,17 +442,17 @@ void execute(std::vector<Token> program){
 				case GT:
 					{
 
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b > a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b > a);
 						break;
 					}
 				case ST:
 					{
 
-						int a = pop(memory);
-						int b = pop(memory);
-						memory.push_back(b < a);
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b < a);
 						break;
 					}
 				default:
@@ -437,7 +476,7 @@ int main(int argc, char* argv[]){
 		return 1; 
 	} 
 		
-	int row = 0;
+	int row = 0; // stores line number 
 	std::string line;
 	while(getline(file, line)){
 		std::vector<Token> tokens = parseLine(line,row);
@@ -448,12 +487,6 @@ int main(int argc, char* argv[]){
 	}
 
 	crossrefIndice(program);
-	
-/* To visualize all tokens and thier data
-	for (Token t : program){
-		println(t.type << "," << t.value << "," << t.data[0]);
-	}
-*/
 
 	execute(program);
 }

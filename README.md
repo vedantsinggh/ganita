@@ -46,4 +46,6 @@ All of implemented commands are given below:
 
 `<condition> IF ..ELSE ..END` : conditional branching
 
-`WHILE <condtion> DO ..END`   : conditional looping`
+`WHILE <condtion> DO ..END`   : conditional looping
+
+`\\`	: C-styled comments

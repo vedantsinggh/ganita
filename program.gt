@@ -3,3 +3,4 @@
 	DUP 2 % 0 NOT = IF DUP PRINT END
 	1 -
 END
+4 PRINT
