@@ -490,8 +490,7 @@ int main(int argc, char* argv[]){
 	bool isCompiling = false;
 
 	if (argc >= 3){
-		std::string arg = *(argv++);
-		if (arg == "-c"){
+		if (*(argv++) == "-c"){
 			isCompiling = true;
 		}
 	}
@@ -517,10 +516,6 @@ int main(int argc, char* argv[]){
 
 	crossrefIndice(program);
 
-	if (!isCompiling){
-		execute(program);
-	}else{
-		assert(false && "Unimplemented compiling");
-	}
+	execute(program);
 }
 
