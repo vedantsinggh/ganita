@@ -520,7 +520,147 @@ int main(int argc, char* argv[]){
 	if (!isCompiling){
 		execute(program);
 	}else{
-		assert(false && "Unimplemented compiling");
+		//assert(false && "Unimplemented compiling");
+	std::ofstream fptr ("a.asm");
+#define insert(str) fptr<<str<<std::endl 
+	insert("section .data");
+	insert("section .bss");
+	insert("	intBUFF resb 100");
+	insert("	intBUFFptr resb 8");
+	insert("section .text");
+	insert("	global _start");
+	insert("_start:");
+	for(int i=0; i < (int)program.size(); i++){
+		Token token = program[i];
+		if (token.type == LITERAL){;
+			fptr<<"	mov rbx,"<<token.value<<std::endl;
+			insert("	push rbx");
+			insert("	xor rbx, rbx");
+		}
+		if (token.type == KEYWORD){
+			switch(token.value){
+				case PLUS:
+				{
+				insert("	pop rax");
+				insert("	pop rbx");
+				insert("	add rax, rbx");
+				insert("	push rax");
+				insert("	xor rax, rax");	
+				insert("	xor rbx, rbx");	
+					break;
+				}
+				case MINUS:
+				{
+				insert("	pop rax");
+				insert("	pop rbx");
+				insert("	sub rax, rbx");
+				insert("	push rax");
+				insert("	xor rax, rax");
+				insert("	xor rax, rax");
+					break;
+				}
+				case DIVIDE:
+				{
+				insert("	pop rax");
+				insert("	pop rbx");
+				insert("	div rbx");
+				insert("	push rax");
+				insert("	xor rax, rax");
+				insert("	xor rbx, rbx");
+					break;
+				}
+				case MUL:
+				{
+				insert("	pop rax");
+				insert("	pop rbx");
+				insert("	mul rbx");
+				insert("	push rax");
+				insert("	xor rax, rax");
+				insert("	xor rbx, rbx");
+					break;
+				}
+				case MOD:
+				{
+				insert("	pop rax");
+				insert("	pop rbx");
+				insert("	div rbx");
+				insert("	push rdx");
+				insert("	xor rax, rax");
+				insert("	xor rbx, rbx");
+				insert("	xor rdx, rdx");
+					break;
+				}
+				case DUP:
+				{
+				insert("	pop rbx");
+				insert("	push rbx");
+				insert("	push rbx");
+				insert("	xor rbx, rbx");
+					break;
+					
+				}
+				case DUP2:
+				{
+				insert("	pop rbx");
+				insert("	pop rcx");
+				insert("	push rcx");
+				insert("	push rbx");
+				insert("	push rcx");
+				insert("	push rbx");
+				insert("	xor rbx, rbx");
+				insert("	xor rcx, rcx");
+					break;
+				}
+				
+				case PRINT:
+				{
+				insert("	pop rax");
+				insert("	call _printRAXint");
+				break;
+				}
+				default:
+					assert(false && "Undetected invalid token found!");
+					exit(1);
+					break;
+				}
+				}
+		}
+	
+//syscall for termination of program		
+	insert("	mov rax, 0x3c");
+	insert("	mov rdi, 1");
+	insert("	syscall");			
+//subroutine for printing int from rax reg
+	insert("_printRAXint:");
+	insert("	mov rcx, intBUFF");
+	insert("	mov [intBUFFptr], rcx");
+	insert("_printRAXintLoop1:");
+	insert("	mov rdx, 0");
+	insert("	mov rbx, 10");
+	insert("	div rbx");
+	insert("	add rdx, 48");
+	insert("	push rax");
+	insert("	mov rcx, [intBUFFptr]");
+	insert("	mov [rcx], dl");
+	insert("	inc rcx");
+	insert("	mov [intBUFFptr], rcx");
+	insert("	pop rax");
+	insert("	cmp rax, 0");
+	insert("	jne _printRAXintLoop1");
+	insert("_printRAXintLoop2:");
+	insert("	mov rcx, [intBUFFptr]");
+	insert("	mov rax, 1");
+	insert("	mov rdi, 1");
+	insert("	mov rsi, rcx");
+	insert("	mov rdx, 1");
+	insert("	syscall");
+	insert("	mov rcx, [intBUFFptr]");
+	insert("	dec rcx");
+	insert("	mov [intBUFFptr], rcx");
+	insert("	cmp rcx, intBUFF");
+	insert("	jge _printRAXintLoop2");
+	insert("	ret");
+	fptr.close();
 	}
 }
 
