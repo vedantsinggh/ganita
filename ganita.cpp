@@ -59,8 +59,8 @@ enum OP_CODE {
 
 	// logical operations
 	NOT,
-	//TODO: implement AND and OR
-
+	AND,
+	OR,
 
 	// other operations
 	PRINT, // pops the last element and prints it to the console
@@ -102,7 +102,7 @@ bool isValid(std::string& str)
 //Cross-references keywords that require jump in code like IF ELSE WHILE etc and stors them in .data section of respective token
 
 int crossrefIndice(std::vector<Token>& program){
-	assert(COUNT == 17 && "Mismatching number of keyword in crossrefIndices()");
+	assert(COUNT == 19 && "Mismatching number of keyword in crossrefIndices()");
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		switch(token.value){
@@ -237,7 +237,7 @@ int crossrefIndice(std::vector<Token>& program){
 }
 
 Token parse(std::string token, int row, int col){
-	assert(COUNT == 17 && "Mismatching number of keyword in tokenize()");
+	assert(COUNT == 19 && "Mismatching number of keyword in tokenize()");
 
 	Token t = {
 		.value = -1,
@@ -280,6 +280,10 @@ Token parse(std::string token, int row, int col){
 		t.value = GT;
 	}else if (token == "<"){
 		t.value = ST;
+	}else if (token == "AND"){
+		t.value = AND;
+	}else if (token == "OR"){
+		t.value = OR;
 	}else{
 		if (isValid(token)){
 			t.value = std::stoi(token);
@@ -324,7 +328,7 @@ int pop(std::vector<int>& program){
 
 void execute(std::vector<Token> program){
 
-	assert(COUNT == 17 && "Mismatching number of keyword in execute()");
+	assert(COUNT == 19 && "Mismatching number of keyword in execute()");
 
 	std::vector<int> stack;
 
@@ -453,6 +457,20 @@ void execute(std::vector<Token> program){
 						int a = pop(stack);
 						int b = pop(stack);
 						stack.push_back(b < a);
+						break;
+					}
+				case AND:
+					{
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b && a);
+						break;
+					}
+				case OR:
+					{
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b || a);
 						break;
 					}
 				default:
