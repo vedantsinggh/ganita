@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <assert.h>
 #include <vector>
@@ -482,47 +483,11 @@ void execute(std::vector<Token> program){
 	}
 }
 
-int main(int argc, char* argv[]){
+void compile(std::vector<Token> program, std::string output_file){
 	
-	assert( argc >= 2 ); //TODO: add proper documentation
+	std::ofstream fptr (output_file + ".asm");
+#define insert(x) fptr << x << std::endl
 
-	std::string exectuable = *(argv++);
-	bool isCompiling = false;
-
-	if (argc >= 3){
-		std::string arg = *(argv++);
-		if (arg == "-c"){
-			isCompiling = true;
-		}
-	}
-
-	std::string filename = *(argv++);
-	std::vector<Token> program; // program stores all tokens to evalute for interpreting or compilation
-	
-	std::ifstream file(filename);
-	if (!file.is_open()) { 
-		printerr("Could not open file: " << filename); 
-		return 1; 
-	} 
-		
-	int row = 0; // stores line number 
-	std::string line;
-	while(getline(file, line)){
-		std::vector<Token> tokens = parseLine(line,row);
-		for(Token token : tokens){
-			program.push_back(token);
-		}
-		row++;
-	}
-
-	crossrefIndice(program);
-
-	if (!isCompiling){
-		execute(program);
-	}else{
-		//assert(false && "Unimplemented compiling");
-	std::ofstream fptr ("a.asm");
-#define insert(str) fptr<<str<<std::endl 
 	insert("section .data");
 	insert("section .bss");
 	insert("	intBUFF resb 100");
@@ -530,6 +495,7 @@ int main(int argc, char* argv[]){
 	insert("section .text");
 	insert("	global _start");
 	insert("_start:");
+
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		if (token.type == LITERAL){;
@@ -541,96 +507,97 @@ int main(int argc, char* argv[]){
 			switch(token.value){
 				case PLUS:
 				{
-				insert("	pop rax");
-				insert("	pop rbx");
-				insert("	add rax, rbx");
-				insert("	push rax");
-				insert("	xor rax, rax");	
-				insert("	xor rbx, rbx");	
+					insert("	pop rax");
+					insert("	pop rbx");
+					insert("	add rax, rbx");
+					insert("	push rax");
+					insert("	xor rax, rax");	
+					insert("	xor rbx, rbx");	
 					break;
 				}
 				case MINUS:
 				{
-				insert("	pop rax");
-				insert("	pop rbx");
-				insert("	sub rax, rbx");
-				insert("	push rax");
-				insert("	xor rax, rax");
-				insert("	xor rax, rax");
+					insert("	pop rax");
+					insert("	pop rbx");
+					insert("	sub rax, rbx");
+					insert("	push rax");
+					insert("	xor rax, rax");
+					insert("	xor rax, rax");
 					break;
 				}
 				case DIVIDE:
 				{
-				insert("	pop rax");
-				insert("	pop rbx");
-				insert("	div rbx");
-				insert("	push rax");
-				insert("	xor rax, rax");
-				insert("	xor rbx, rbx");
+					insert("	pop rax");
+					insert("	pop rbx");
+					insert("	div rbx");
+					insert("	push rax");
+					insert("	xor rax, rax");
+					insert("	xor rbx, rbx");
 					break;
 				}
 				case MUL:
 				{
-				insert("	pop rax");
-				insert("	pop rbx");
-				insert("	mul rbx");
-				insert("	push rax");
-				insert("	xor rax, rax");
-				insert("	xor rbx, rbx");
+					insert("	pop rax");
+					insert("	pop rbx");
+					insert("	mul rbx");
+					insert("	push rax");
+					insert("	xor rax, rax");
+					insert("	xor rbx, rbx");
 					break;
 				}
 				case MOD:
 				{
-				insert("	pop rax");
-				insert("	pop rbx");
-				insert("	div rbx");
-				insert("	push rdx");
-				insert("	xor rax, rax");
-				insert("	xor rbx, rbx");
-				insert("	xor rdx, rdx");
+					insert("	pop rax");
+					insert("	pop rbx");
+					insert("	div rbx");
+					insert("	push rdx");
+					insert("	xor rax, rax");
+					insert("	xor rbx, rbx");
+					insert("	xor rdx, rdx");
 					break;
 				}
 				case DUP:
 				{
-				insert("	pop rbx");
-				insert("	push rbx");
-				insert("	push rbx");
-				insert("	xor rbx, rbx");
+					insert("	pop rbx");
+					insert("	push rbx");
+					insert("	push rbx");
+					insert("	xor rbx, rbx");
 					break;
 					
 				}
 				case DUP2:
 				{
-				insert("	pop rbx");
-				insert("	pop rcx");
-				insert("	push rcx");
-				insert("	push rbx");
-				insert("	push rcx");
-				insert("	push rbx");
-				insert("	xor rbx, rbx");
-				insert("	xor rcx, rcx");
+					insert("	pop rbx");
+					insert("	pop rcx");
+					insert("	push rcx");
+					insert("	push rbx");
+					insert("	push rcx");
+					insert("	push rbx");
+					insert("	xor rbx, rbx");
+					insert("	xor rcx, rcx");
 					break;
 				}
 				
 				case PRINT:
 				{
-				insert("	pop rax");
-				insert("	call _printRAXint");
-				break;
+					insert("	pop rax");
+					insert("	call _printRAXint");
+					break;
 				}
 				default:
 					assert(false && "Undetected invalid token found!");
 					exit(1);
 					break;
 				}
-				}
-		}
-	
-//syscall for termination of program		
+			}
+		}	
+
+	//syscall for termination of program		
 	insert("	mov rax, 0x3c");
 	insert("	mov rdi, 1");
 	insert("	syscall");			
-//subroutine for printing int from rax reg
+
+	//subroutine for printing int from rax reg
 	insert("_printRAXint:");
 	insert("	mov rcx, intBUFF");
 	insert("	mov [intBUFFptr], rcx");
@@ -661,6 +628,78 @@ int main(int argc, char* argv[]){
 	insert("	jge _printRAXintLoop2");
 	insert("	ret");
 	fptr.close();
+	
+
+	//TODO: check validity of command and res codes
+	std::string command = "nasm -f elf64 -o " + output_file + ".o " + output_file + ".asm";
+	system(command.c_str());
+
+	std::string out = "ld -o" + output_file + " " + output_file +".o";
+	system(out.c_str());
+	
+	std::string clean = "rm " + output_file + ".o " + output_file + ".asm" ;
+	system(clean.c_str());
+
+}
+
+int main(int argc, char* argv[]){
+	
+	assert( argc >= 2 ); //TODO: add proper documentation
+
+	std::string executable = argv[0];
+	bool isCompiling = false;
+	std::string output_file = "app";
+	std::string filename = "";
+
+
+	//TODO: add flags to build either ELF executable or to object files or just asm
+	//TODO: add verbose flag
+	for (int i = 1; i < argc; ++i) {
+		std::string arg = argv[i];
+		if (arg == "-c") {
+			isCompiling = true;
+		} else if (arg == "-o") {
+			if (i + 1 < argc) {
+				output_file = argv[++i];
+			} else {
+				printerr("Output file not specified after -o");
+				exit(1);
+			}
+		} else {
+			filename = arg;
+			break; // Assume the filename is the last relevant argument
+		}
+	}
+
+	if (filename.empty()) {
+		printerr("Filename not provided or invalid");
+		exit(1);
+	}
+
+	std::vector<Token> program; // program stores all tokens to evalute for interpreting or compilation
+	
+	std::ifstream file(filename);
+	if (!file.is_open()) { 
+		printerr("Could not open file: " << filename); 
+		return 1; 
+	} 
+		
+	int row = 0; // stores line number 
+	std::string line;
+	while(getline(file, line)){
+		std::vector<Token> tokens = parseLine(line,row);
+		for(Token token : tokens){
+			program.push_back(token);
+		}
+		row++;
+	}
+
+	crossrefIndice(program);
+
+	if (!isCompiling){
+		execute(program);
+	}else{
+		compile(program, output_file);
 	}
 }
 
