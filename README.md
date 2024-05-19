@@ -25,6 +25,20 @@ END
 
 this prints odd numbers from 9 to 0
 
+## How to Run?
+Ganita is pretty flexible language that supports both interpretation and compillation.<br>
+
+#### STEP 1
+	make
+		 # it produces "ganita" executable which has builtin compiler and interpreter
+
+#### STEP 2
+	`./ganita <filename>`
+		# it run in interpretation mode by default.
+
+	# Add `-c` to compile and build executable 
+	# Add `-o` to provide output file name
+
 ## Documentation
 Language works on concept of stacks.
 Every data is pushed and pop though data in a linear fashion.
