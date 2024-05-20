@@ -3,6 +3,6 @@
 !*/
 *.swp
 .vscode
-.out
-.o
-.asm
+*.out
+*.o
+*.asm
