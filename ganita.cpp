@@ -47,6 +47,7 @@ enum OP_TYPE {
 	STRING,
 };
 
+
 // This defines all possible keywords
 enum OP_CODE {
 
@@ -84,6 +85,35 @@ enum OP_CODE {
 
 	COUNT // used to count total number of operation introduced to exhaust all switch cases
 };
+
+std::string getOPCODE(int index){
+	
+	std::string names[] = {
+	"PLUS",
+	"MINUS",
+	"DIVIDE",
+	"MUL",
+	"MOD",
+	"GT",
+	"ST",
+	"EQUAL",
+	"NOT",
+	"AND",
+	"OR",
+	"PRINT",
+	"DUP",
+	"DUP2",
+	"MACRO",
+	"SWAP",
+	"OVER",
+	"IFF",	
+	"ELCE",
+	"WILE",
+	"DO",
+	"END"
+	 };
+	return names[index];
+}
 
 // it represents every kind of valid word that would be coded in the program. Currently it could be either a number[OP_TYPE  = literal] that should be pushed onto the stack or a operation [OP_TYPE = KEYWORD]
 struct Token {
@@ -330,9 +360,13 @@ Token parse(std::string token, int row, int col){
 	return t;
 }
 
+std::vector<std::string> macros;
+std::vector<std::string> macros_rep;
+
 std::vector<Token> parseLine(std::string line, int row){
 	std::vector<Token> tokens;
 	std::string token;
+
 	line+= " ";
 	for (int i=0; i < (int)line.size(); i++){
 		char t = line[i];
@@ -343,9 +377,63 @@ std::vector<Token> parseLine(std::string line, int row){
 			if (token.rfind("//", 0) == 0){
 				return tokens;	
 			}
-			tokens.push_back(parse(token, row, i));
-			token = "";
-			continue;
+
+			bool isMacro = false;
+			for (int k=0; k<(int)macros.size(); k++){
+				if (macros[k] == token){
+					isMacro = true;
+					std::string addLine = macros_rep[k];
+					std::vector<Token> addToken = parseLine(addLine, row);
+					tokens.insert(tokens.end(),addToken.begin(), addToken.end());
+				}
+			}
+
+
+			if (isMacro){
+				token = "";
+				continue;
+			}
+
+			Token res = parse(token, row, i);
+
+			//TODO: add bound check and other check nessesary in macro
+			//TODO: ad multiline macro
+			if (res.type == KEYWORD && res.value == MACRO){
+
+				std::string mac_word = "";
+				i = i+1;
+				while (true){
+					char ch = line[i]; 
+					if (ch == ' '){
+						break;
+					}
+					mac_word += ch;
+					i++;
+				}
+				macros.push_back(mac_word);
+				i++;	
+				std::string mac_rep_word;
+				std::string mac_rep_str;
+				while (i < (int)line.size()){
+					if (line[i] == ' '){
+						if(mac_rep_word == "END"){
+							break;
+						}
+						else{
+							mac_rep_str += mac_rep_word + " ";
+							mac_rep_word = "";
+						}
+					}else{
+						mac_rep_word += line[i];
+					}
+					i++;
+				}
+				macros_rep.push_back(mac_rep_str);
+			}else {
+				tokens.push_back(res);
+				token = "";
+				continue;
+			}
 		}
 		else if (t == '\"'){
 			i++;
@@ -763,7 +851,18 @@ int main(int argc, char* argv[]){
 		}
 		row++;
 	}
-	
+
+#if 0 // to visualize the program stack		
+	println("_____________");
+	for (Token t : program){
+		if (t.type == KEYWORD)
+			println(getOPCODE(t.value));
+		else
+			println(t.value);
+	}
+	println("_____________");
+#endif
+
 	crossrefIndice(program);
 
 	if (!isCompiling){
