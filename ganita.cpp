@@ -487,30 +487,35 @@ void compile(std::vector<Token> program, std::string output_file){
 	
 	std::ofstream fptr (output_file + ".asm");
 #define insert(x) fptr << x << std::endl
-
+	insert("global _start");
 	insert("section .data");
+	insert("	dot db \".\", 0");
+	insert("	newline db \".\", 10");
 	insert("section .bss");
-	insert("	intBUFF resb 100");
-	insert("	intBUFFptr resb 8");
+	insert("	intBUFF: resq 30");
+	insert("	intBUFFptr: resq 1");
+	insert("	decCHARbuff: resb 1");
 	insert("section .text");
-	insert("	global _start");
 	insert("_start:");
 
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		if (token.type == LITERAL){;
-			fptr<<"	mov rbx,"<<token.value<<std::endl;
-			insert("	push rbx");
-			insert("	xor rbx, rbx");
+			fptr<<"	mov r8, __float64__("<<token.value<<".0"<<")"<<std::endl;  //converting int to float  
+			insert("	push r8");
+			insert("	xor r8, r8");
 		}
 		if (token.type == KEYWORD){
 			switch(token.value){
 				case PLUS:
 				{
 					insert("	pop rax");
+					insert("	movq xmm0, rax");
 					insert("	pop rbx");
-					insert("	add rax, rbx");
-					insert("	push rax");
+					insert("	movq xmm1, rbx");
+					insert("	addsd xmm0, xmm1");
+					insert("	movq r8, xmm0");
+					insert("	push r8");
 					insert("	xor rax, rax");	
 					insert("	xor rbx, rbx");	
 					break;
@@ -518,44 +523,60 @@ void compile(std::vector<Token> program, std::string output_file){
 				case MINUS:
 				{
 					insert("	pop rax");
+					insert("	movq xmm0, rax");
 					insert("	pop rbx");
-					insert("	sub rax, rbx");
-					insert("	push rax");
-					insert("	xor rax, rax");
-					insert("	xor rax, rax");
+					insert("	movq xmm1, rbx");
+					insert("	subsd xmm0, xmm1");
+					insert("	movq r8, xmm0");
+					insert("	push r8");
+					insert("	xor rax, rax");	
+					insert("	xor rbx, rbx");	
 					break;
 				}
 				case DIVIDE:
 				{
 					insert("	pop rax");
+					insert("	movq xmm1, rax");
 					insert("	pop rbx");
-					insert("	div rbx");
-					insert("	push rax");
-					insert("	xor rax, rax");
-					insert("	xor rbx, rbx");
+					insert("	movq xmm0, rbx");
+					insert("	divsd xmm0, xmm1");
+					insert("	movq r8, xmm0");
+					insert("	push r8");
+					insert("	xor rax, rax");	
+					insert("	xor rbx, rbx");	
 					break;
 				}
 				case MUL:
-				{
+				{	
 					insert("	pop rax");
+					insert("	movq xmm0, rax");
 					insert("	pop rbx");
-					insert("	mul rbx");
-					insert("	push rax");
-					insert("	xor rax, rax");
-					insert("	xor rbx, rbx");
+					insert("	movq xmm1, rbx");
+					insert("	mulsd xmm0, xmm1");
+					insert("	movq r8, xmm0");
+					insert("	push r8");
+					insert("	xor rax, rax");	
+					insert("	xor rbx, rbx");	
 					break;
 				}
 				case MOD:
-				{
+				{	
 					insert("	pop rax");
+					insert("	movq xmm1, rax");
+					insert("	xor rax, rax");
 					insert("	pop rbx");
+					insert("	movq xmm0, rbx");
+					insert("	cvtsd2si rax, xmm0");
+					insert("	cvtsd2si rbx, xmm1");
 					insert("	div rbx");
-					insert("	push rdx");
+					insert("	cvtsi2sd xmm0, rdx");
+					insert("	movq rax, xmm0");
+					insert("	push rax");
 					insert("	xor rax, rax");
 					insert("	xor rbx, rbx");
 					insert("	xor rdx, rdx");
 					break;
-				}
+				}                                                              
 				case DUP:
 				{
 					insert("	pop rbx");
@@ -581,7 +602,12 @@ void compile(std::vector<Token> program, std::string output_file){
 				case PRINT:
 				{
 					insert("	pop rax");
-					insert("	call _printRAXint");
+					insert("	call _printRAXfloat");
+					insert("	mov rax, 1");
+					insert("	mov rdi, 1");
+					insert("	mov rsi, 10");
+					insert("	mov rdx, 1");
+					insert("	syscall");
 					break;
 				}
 				default:
@@ -595,38 +621,75 @@ void compile(std::vector<Token> program, std::string output_file){
 	//syscall for termination of program		
 	insert("	mov rax, 0x3c");
 	insert("	mov rdi, 1");
-	insert("	syscall");			
-
-	//subroutine for printing int from rax reg
-	insert("_printRAXint:");
-	insert("	mov rcx, intBUFF");
-	insert("	mov [intBUFFptr], rcx");
-	insert("_printRAXintLoop1:");
-	insert("	mov rdx, 0");
-	insert("	mov rbx, 10");
-	insert("	div rbx");
-	insert("	add rdx, 48");
-	insert("	push rax");
-	insert("	mov rcx, [intBUFFptr]");
-	insert("	mov [rcx], dl");
-	insert("	inc rcx");
-	insert("	mov [intBUFFptr], rcx");
-	insert("	pop rax");
-	insert("	cmp rax, 0");
-	insert("	jne _printRAXintLoop1");
-	insert("_printRAXintLoop2:");
-	insert("	mov rcx, [intBUFFptr]");
-	insert("	mov rax, 1");
-	insert("	mov rdi, 1");
-	insert("	mov rsi, rcx");
+	insert("	syscall");
+	insert("	");
+	insert("_printRAXfloat:");
+	insert("	movq xmm0, rax");			
+	insert("	push rax");			
+	insert("	roundsd xmm0, xmm0, 0x3");			
+	insert("	xor rax, rax");			
+	insert("	cvtsd2si rax, xmm0");			
+	insert("	call _printRAXint");			
+	insert("	mov rax, 1");			
+	insert("	mov rdi, 1");			
+	insert("	mov rsi, dot");			
 	insert("	mov rdx, 1");
 	insert("	syscall");
-	insert("	mov rcx, [intBUFFptr]");
-	insert("	dec rcx");
-	insert("	mov [intBUFFptr], rcx");
-	insert("	cmp rcx, intBUFF");
-	insert("	jge _printRAXintLoop2");
-	insert("	ret");
+	insert("	mov rbx, 1");				
+	insert("_printDEC:");				
+	insert("	inc rbx");				
+	insert("	pop rax");				
+	insert("	movq xmm0, rax");				
+	insert("	roundsd xmm1, xmm0, 0x3");				
+	insert("	subsd xmm0, xmm1");				
+	insert("	mov r8, __float64__(10.0)");				
+	insert("	movq xmm1, r8");				
+	insert("	mulsd xmm0, xmm1");				
+	insert("	movq rax, xmm0");				
+	insert("	push rax");				
+	insert("	roundsd xmm0, xmm0, 0x3");				
+	insert("	cvtsd2si rax, xmm0");				
+	insert("	add rax, 48");				
+	insert("	mov [decCHARbuff], rax");				
+	insert("	mov rax, 1");				
+	insert("	mov rdi, 1");				
+	insert("	mov rsi, decCHARbuff");				
+	insert("	mov rdx, 1");				
+	insert("	syscall");				
+	insert("	cmp rbx, 6");				
+	insert("	jle _printDEC");				
+	insert("	pop rax");				
+	insert("	xor rax, rax");				
+	insert("	ret");				
+	insert("_printRAXint:");			
+	insert("	mov rcx, intBUFF");			
+	insert("	mov [intBUFFptr], rcx");			
+	insert("_printRAXintLoop1:");			
+	insert("	mov rdx, 0");
+	insert("	mov rbx, 10");			
+	insert("	div rbx");			
+	insert("	add rdx, 48");			
+	insert("	push rax");			
+	insert("	mov rcx, [intBUFFptr]");			
+	insert("	mov [rcx], dl");			
+	insert("	inc rcx");			
+	insert("	mov [intBUFFptr], rcx");			
+	insert("	pop rax");			
+	insert("	cmp rax, 0");			
+	insert("	jne _printRAXintLoop1");			
+	insert("_printRAXintLoop2:");			
+	insert("	mov rcx, [intBUFFptr]");			
+	insert("	mov rax, 1");			
+	insert("	mov rdi, 1");			
+	insert("	mov rsi, rcx");			
+	insert("	mov rdx, 1");			
+	insert("	syscall");			
+	insert("	mov rcx, [intBUFFptr]");			
+	insert("	dec rcx");			
+	insert("	mov [intBUFFptr], rcx");			
+	insert("	cmp rcx, intBUFF");			
+	insert("	jge _printRAXintLoop2");			
+	insert("	ret");			
 	fptr.close();
 	
 
@@ -637,7 +700,7 @@ void compile(std::vector<Token> program, std::string output_file){
 	std::string out = "ld -o" + output_file + " " + output_file +".o";
 	system(out.c_str());
 	
-	std::string clean = "rm " + output_file + ".o " + output_file + ".asm" ;
+	std::string clean = "rm " + output_file + ".o "; //+ output_file + ".asm" ;
 	system(clean.c_str());
 
 }
