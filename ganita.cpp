@@ -1,9 +1,12 @@
+#include <iomanip>
+#include <cstdint>
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
 #include <assert.h>
 #include <vector>
 #include <string>
+#include <cstring>
 
 #define printp(x) std::cout<<x
 #define println(x) std::cout<<x<<std::endl
@@ -40,7 +43,8 @@
 // It is used to define type of token pushed onto the stack
 enum OP_TYPE {
 	LITERAL,
-	KEYWORD
+	KEYWORD,
+	STRING,
 };
 
 // This defines all possible keywords
@@ -67,6 +71,9 @@ enum OP_CODE {
 	PRINT, // pops the last element and prints it to the console
 	DUP, // copies last element onto the stack
 	DUP2, // copies last two element onto the stack
+	MACRO,
+	SWAP,
+	OVER,
 
 	// condtional and looping operations
 	IFF,	
@@ -80,9 +87,10 @@ enum OP_CODE {
 
 // it represents every kind of valid word that would be coded in the program. Currently it could be either a number[OP_TYPE  = literal] that should be pushed onto the stack or a operation [OP_TYPE = KEYWORD]
 struct Token {
-	int value;
+	unsigned long long int value;
 	int position[2]; // store location of first charactor of the token in [row, column]
 	OP_TYPE type;
+	uintptr_t address; // for tokens that require address to be stored
 	int data[3]; // store cross-referenced data. Example: for `IF` it will store location of `ELSE` and `END`
 };
 
@@ -103,7 +111,7 @@ bool isValid(std::string& str)
 //Cross-references keywords that require jump in code like IF ELSE WHILE etc and stors them in .data section of respective token
 
 int crossrefIndice(std::vector<Token>& program){
-	assert(COUNT == 19 && "Mismatching number of keyword in crossrefIndices()");
+	assert(COUNT == 22 && "Mismatching number of keyword in crossrefIndices()");
 	for(int i=0; i < (int)program.size(); i++){
 		Token token = program[i];
 		switch(token.value){
@@ -238,12 +246,13 @@ int crossrefIndice(std::vector<Token>& program){
 }
 
 Token parse(std::string token, int row, int col){
-	assert(COUNT == 19 && "Mismatching number of keyword in tokenize()");
+	assert(COUNT == 22 && "Mismatching number of keyword in tokenize()");
 
 	Token t = {
-		.value = -1,
+		.value = 0,
 		.position = {row, col},
 		.type = KEYWORD,
+		.address = 0,
 		.data = {-1} // -1 indicates that this data is not being used
 	};
 	
@@ -285,14 +294,36 @@ Token parse(std::string token, int row, int col){
 		t.value = AND;
 	}else if (token == "OR"){
 		t.value = OR;
+	}else if (token == "MACRO"){
+		t.value = MACRO;
+	}else if (token == "SWAP"){
+		t.value = SWAP;
+	}else if (token == "OVER"){
+		t.value = OVER;
 	}else{
 		if (isValid(token)){
 			t.value = std::stoi(token);
 			t.type  = LITERAL;
 		}
 		else {
-			printerr("Unknown token at line(" << row + 1 << "," << col - 1<< ")");
-			exit(1);
+
+			if (token.rfind("\"", 0) == 0){
+
+				char* copy = new char[token.size()] + 1;
+				const char* k =  token.c_str();
+				std::strcpy(copy,k);
+
+				void* ptr = (void *) &(copy);
+				uintptr_t address = (uintptr_t)(ptr);
+				const char* s= (const char*)(address);
+
+				t.value = token.size();
+				t.address = address;//should be pointer to first character of the string
+				t.type = STRING;
+			}else{
+				printerr("Unknown token " << token << " at line(" << row + 1 << "," << col - 1<< ")");
+				exit(1);
+			}
 		}
 	}
 
@@ -316,7 +347,20 @@ std::vector<Token> parseLine(std::string line, int row){
 			token = "";
 			continue;
 		}
-		token += t;
+		else if (t == '\"'){
+			i++;
+			token += t;
+			while (i < (int)line.size()){
+				char c = line[i];
+				if (c == '\"'){
+					break;
+				}
+				token += c;
+				i++;
+			}
+		}else{
+			token += t;
+		}
 	}
 	return tokens;
 }
@@ -329,7 +373,7 @@ int pop(std::vector<int>& program){
 
 void execute(std::vector<Token> program){
 
-	assert(COUNT == 19 && "Mismatching number of keyword in execute()");
+	assert(COUNT == 22 && "Mismatching number of keyword in execute()");
 
 	std::vector<int> stack;
 
@@ -337,6 +381,11 @@ void execute(std::vector<Token> program){
 		Token token = program[i];
 		if (token.type == LITERAL){;
 			stack.push_back(token.value);
+		}
+		if (token.type == STRING){
+			stack.push_back(token.value);
+			//TODO: implement string operations
+			assert(false && "String is stil unimplemented");
 		}
 		if (token.type == KEYWORD){
 			switch(token.value){
@@ -473,6 +522,27 @@ void execute(std::vector<Token> program){
 						int b = pop(stack);
 						stack.push_back(b || a);
 						break;
+					}
+				case OVER:
+					{
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(b);
+						stack.push_back(a);
+						stack.push_back(b);
+						break;
+					}
+				case SWAP:
+					{
+						int a = pop(stack);
+						int b = pop(stack);
+						stack.push_back(a);
+						stack.push_back(b);
+						break;
+					}
+				case MACRO:
+					{
+						assert(false && "unimplemented");	
 					}
 				default:
 					assert(false && "Undeteced invalid token found!");
@@ -693,7 +763,7 @@ int main(int argc, char* argv[]){
 		}
 		row++;
 	}
-
+	
 	crossrefIndice(program);
 
 	if (!isCompiling){
