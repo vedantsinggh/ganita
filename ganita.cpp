@@ -648,7 +648,7 @@ void compile(std::vector<Token> program, std::string output_file){
 	insert("global _start");
 	insert("section .data");
 	insert("	dot db \".\", 0");
-	insert("	newline db \".\", 10");
+	insert("	newline db 10");
 	insert("section .bss");
 	insert("	intBUFF: resq 30");
 	insert("	intBUFFptr: resq 1");
@@ -763,9 +763,90 @@ void compile(std::vector<Token> program, std::string output_file){
 					insert("	call _printRAXfloat");
 					insert("	mov rax, 1");
 					insert("	mov rdi, 1");
-					insert("	mov rsi, 10");
+					insert("	mov rsi, newline");
 					insert("	mov rdx, 1");
 					insert("	syscall");
+					break;
+				}
+				
+				case GT:
+				{
+					insert("	pop r8");
+					insert("	pop r9");				
+					insert("	cmp r9, r8");				
+					fptr<<"	jg _gt"<<token.position[0]<<token.position[1]<<std::endl;				
+					insert("	mov rax, __float64__(0.0)");				
+					insert("	push rax");
+					fptr<<"	jmp _gtend"<<token.position[0]<<token.position[1]<<std::endl;				
+					fptr<<"_gt"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					insert("	mov rax, __float64__(1.0)");				
+					insert("	push rax");				
+					fptr<<"_gtend"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					break;
+				}
+				case ST:
+				{
+					insert("	pop r8");
+					insert("	pop r9");				
+					insert("	cmp r9, r8");				
+					fptr<<"	jl _lt"<<token.position[0]<<token.position[1]<<std::endl;				
+					insert("	mov rax, __float64__(0.0)");				
+					insert("	push rax");
+					fptr<<"	jmp _ltend"<<token.position[0]<<token.position[1]<<std::endl;				
+					fptr<<"_lt"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					insert("	mov rax, __float64__(1.0)");				
+					insert("	push rax");				
+					fptr<<"_ltend"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					break;
+				}
+				case EQUAL:
+				{
+					insert("	pop r8");
+					insert("	pop r9");				
+					insert("	cmp r9, r8");				
+					fptr<<"	je _eq"<<token.position[0]<<token.position[1]<<std::endl;				
+					insert("	mov rax, __float64__(0.0)");				
+					insert("	push rax");
+					fptr<<"	jmp _eqend"<<token.position[0]<<token.position[1]<<std::endl;				
+					fptr<<"_eq"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					insert("	mov rax, __float64__(1.0)");				
+					insert("	push rax");				
+					fptr<<"_eqend"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					break;
+				}
+				case NOT:
+				{
+					insert("	pop r8");
+					insert("	mov rax, __float64__(0.0)");				
+					insert("	cmp r8, rax");				
+					fptr<<"	je _not"<<token.position[0]<<token.position[1]<<std::endl;				
+					insert("	mov r9, __float64__(0.0)");				
+					insert("	push r9");
+					fptr<<"	jmp _notend"<<token.position[0]<<token.position[1]<<std::endl;				
+					fptr<<"_not"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					insert("	mov r9, __float64__(1.0)");				
+					insert("	push r9");				
+					fptr<<"_notend"<<token.position[0]<<token.position[1]<<":"<<std::endl;				
+					break;
+				}	
+				case AND:
+				{
+					insert("	pop r8");
+					insert("	pop r9");								
+					insert("	and r9, r8");				
+					insert("	push r9");					
+					insert("	xor r8, r8");	
+					insert("	xor r9, r9");				
+					break;
+				}
+				case OR:
+				{
+					insert("	pop r8");
+					insert("	pop r9");				
+					insert("	or r9, r8");
+					insert("	push r9");
+					insert("	xor r8, r8");				
+					insert("	xor r9, r9");						
 					break;
 				}
 				default:
@@ -858,7 +939,7 @@ void compile(std::vector<Token> program, std::string output_file){
 	std::string out = "ld -o" + output_file + " " + output_file +".o";
 	system(out.c_str());
 	
-	std::string clean = "rm " + output_file + ".o "; //+ output_file + ".asm" ;
+	std::string clean = "rm " + output_file + ".o "+ output_file + ".asm" ;
 	system(clean.c_str());
 
 }
