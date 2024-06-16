@@ -16,17 +16,17 @@ Following example takes 2 input and pushes max of the two onto the stack: <br>
 
 This prints 3 to the console.
 
-`
+`asm
 10 WHILE DUP 0 > DO
 	DUP 2 % 0 NOT = IF DUP PRINT END
 	1 -
 END
 `
 
-this prints odd numbers from 9 to 0
+This prints odd numbers from 9 to 0
 
 ## How to Run?
-Ganita is pretty flexible language that supports both interpretation and compillation.<br>
+Ganita is pretty flexible language that supports both interpretation and compilation.<br>
 
 #### STEP 1
 	make
@@ -46,7 +46,7 @@ There are various operation for data handling and manipulation.
 
 All of implemented commands are given below:
 
-`*/-+%` : Performs basic arithmetic by poping last 2 elements and pushing the result
+`*/-+%` : Performs basic arithmetic by popping last 2 elements and pushing the result
 
 `PRINT` : Pops the last element and prints it to the console
 
@@ -56,10 +56,16 @@ All of implemented commands are given below:
 
 `NOT`   : Flips the last element 
 
-`=><`   : Performs basic condtional check by poping last 2 elements and pushing the result
+`=><`   : Performs basic conditional check by popping last 2 elements and pushing the result
 
 `<condition> IF ..ELSE ..END` : conditional branching
 
 `WHILE <condtion> DO ..END`   : conditional looping
 
 `\\`	: C-styled comments
+
+## Stats
+
+To print 1 billion numbers: Ganita vs C 
+C: 23.77s user 161.22s system 79% cpu 3:51.23 total
+Ganita: 51.38s user 160.44s system 87% cpu 4:03.00 total
