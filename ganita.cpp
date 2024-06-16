@@ -19,7 +19,7 @@
  *  Token holds whole data of token
  *  	.value	   : it stores value of literal or OP_CODE in case of keyword
  *	.type      : it stores type of token
- *	.position  : it stores the location of first character of keyword. it is used to throw compile time error
+ *	.position  : it stores the location of first character of keyword. It is used to throw compile time error
  *	.data	   : it stores any data required by any keyword:
  *			for IF     : data[0] holds position of it's respective ELSE block(or END block in case there is no ELSE block)
  *			for ELSE   : data[0] holds position of it's respective END block
@@ -37,6 +37,8 @@
  *		DO check the last bit to be either true or false. In case of true it continues the linear execution otherwise it jumps the execution to next line of END.
  *		END always jumps execution to while loop thus inferring re-evaluation of condition forming a conditional loop.
  *
+ * TODO: write a unit tests
+ * TODO: create proper syntax
  * */
 
 
@@ -137,6 +139,7 @@ bool isValid(std::string& str)
 
 //TODO: check whether any un-IF ELSE or un-IF END is present and throw valid error
 //TODO: check whether WHILE has DO and END statements and if not throw valid error
+//TODO: error system to handle and report error
 
 //Cross-references keywords that require jump in code like IF ELSE WHILE etc and stores them in .data section of respective token
 
@@ -296,39 +299,39 @@ Token parse(std::string token, int row, int col){
 		t.value = DIVIDE;
 	}else if (token == "%"){
 		t.value = MOD;
-	}else if (token == "NOT"){
+	}else if (token == "not"){
 		t.value = NOT;
-	}else if (token == "PRINT"){
+	}else if (token == "print"){
 		t.value = PRINT;
-	}else if (token == "DUP"){
+	}else if (token == "dup"){
 		t.value = DUP;
-	}else if (token == "2DUP"){
+	}else if (token == "2dup"){
 		t.value = DUP2;
 	}else if (token == "="){
 		t.value = EQUAL;
-	}else if (token == "IF"){
+	}else if (token == "if"){
 		t.value = IFF;
-	}else if (token == "END"){
+	}else if (token == "end"){
 		t.value = END;
-	}else if (token == "ELSE"){
+	}else if (token == "else"){
 		t.value = ELCE;
-	}else if (token == "WHILE"){
+	}else if (token == "while"){
 		t.value = WILE;
-	}else if (token == "DO"){
+	}else if (token == "do"){
 		t.value = DO;
 	}else if (token == ">"){
 		t.value = GT;
 	}else if (token == "<"){
 		t.value = ST;
-	}else if (token == "AND"){
+	}else if (token == "and"){
 		t.value = AND;
-	}else if (token == "OR"){
+	}else if (token == "or"){
 		t.value = OR;
-	}else if (token == "MACRO"){
+	}else if (token == "macro"){
 		t.value = MACRO;
-	}else if (token == "SWAP"){
+	}else if (token == "swap"){
 		t.value = SWAP;
-	}else if (token == "OVER"){
+	}else if (token == "over"){
 		t.value = OVER;
 	}else{
 		if (isValid(token)){
@@ -416,7 +419,7 @@ std::vector<Token> parseLine(std::string line, int row){
 				std::string mac_rep_str;
 				while (i < (int)line.size()){
 					if (line[i] == ' '){
-						if(mac_rep_word == "END"){
+						if(mac_rep_word == "end"){
 							break;
 						}
 						else{
