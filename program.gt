@@ -1,7 +1,9 @@
-MACRO ONE 1 END
-MACRO PRINTNUM DUP PRINT END
+//this is comment 
 
-5 WHILE DUP 0 > DO
-	PRINTNUM
-	ONE - 
-END
+
+macro billion 100000000
+macro one 1 end
+billion while dup 0 > do
+dup print
+1 -
+end
