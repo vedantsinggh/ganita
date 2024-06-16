@@ -19,23 +19,23 @@
  *  Token holds whole data of token
  *  	.value	   : it stores value of literal or OP_CODE in case of keyword
  *	.type      : it stores type of token
- *	.position  : it stores the location of first charactor of keyword. it is used to throw compile time error
+ *	.position  : it stores the location of first character of keyword. it is used to throw compile time error
  *	.data	   : it stores any data required by any keyword:
- *			for IF     : data[0] holds position of it's repective ELSE block(or END block in case there is no ELSE block)
- *			for ELSE   : data[0] holds position of it's repective END block
- *			for WHILE  : data[0] holds position of it's repective END block
+ *			for IF     : data[0] holds position of it's respective ELSE block(or END block in case there is no ELSE block)
+ *			for ELSE   : data[0] holds position of it's respective END block
+ *			for WHILE  : data[0] holds position of it's respective END block
  *			for END    : data[0] holds position of WHILE block only.
  *
  *
  *	How Do We Branch?
- *		IF of the condition it true then it continues its exectution linearly but if the condition is false it jumps to next line of either ELSE or END.
- *		ELSE it always jumps the exectution to next line of END block.
+ *		IF of the condition it true then it continues its execution linearly but if the condition is false it jumps to next line of either ELSE or END.
+ *		ELSE it always jumps the execution to next line of END block.
  *		END in conditional branching is always used as marker. It has not functionality.
  *
  *	How Do We Loop?
  *		WHILE is always used as mark from where the looping begins .
- *		DO check the last bit to be either true or false. In case of true it continues the linear execttion otherwise it jumps the exectution to next line of END.
- *		END always jumps exection to while loop thus infering re-evaluttion of condition forming a condtional loop.
+ *		DO check the last bit to be either true or false. In case of true it continues the linear execution otherwise it jumps the execution to next line of END.
+ *		END always jumps execution to while loop thus inferring re-evaluation of condition forming a conditional loop.
  *
  * */
 
@@ -51,14 +51,14 @@ enum OP_TYPE {
 // This defines all possible keywords
 enum OP_CODE {
 
-	// arithematic operations
+	// arithmetic operations
 	PLUS,
 	MINUS,
 	DIVIDE,
 	MUL,
 	MOD,
 
-	// comparsion operations
+	// comparison operations
 	GT,
 	ST,
 	EQUAL,
@@ -76,7 +76,7 @@ enum OP_CODE {
 	SWAP,
 	OVER,
 
-	// condtional and looping operations
+	// conditional and looping operations
 	IFF,	
 	ELCE,
 	WILE,
@@ -118,7 +118,7 @@ std::string getOPCODE(int index){
 // it represents every kind of valid word that would be coded in the program. Currently it could be either a number[OP_TYPE  = literal] that should be pushed onto the stack or a operation [OP_TYPE = KEYWORD]
 struct Token {
 	unsigned long long int value;
-	int position[2]; // store location of first charactor of the token in [row, column]
+	int position[2]; // store location of first character of the token in [row, column]
 	OP_TYPE type;
 	uintptr_t address; // for tokens that require address to be stored
 	int data[3]; // store cross-referenced data. Example: for `IF` it will store location of `ELSE` and `END`
@@ -138,7 +138,7 @@ bool isValid(std::string& str)
 //TODO: check whether any un-IF ELSE or un-IF END is present and throw valid error
 //TODO: check whether WHILE has DO and END statements and if not throw valid error
 
-//Cross-references keywords that require jump in code like IF ELSE WHILE etc and stors them in .data section of respective token
+//Cross-references keywords that require jump in code like IF ELSE WHILE etc and stores them in .data section of respective token
 
 int crossrefIndice(std::vector<Token>& program){
 	assert(COUNT == 22 && "Mismatching number of keyword in crossrefIndices()");
@@ -171,7 +171,7 @@ int crossrefIndice(std::vector<Token>& program){
 					index++;
 				}
 				if(!flag){
-					printerr("IF block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1 << "0");
+					printerr("IF block should always end with `END` at line(" << token.position[0] + 1 << "," <<token.position[1] - 1 << "0");
 					exit(1);
 				}
 				break;
@@ -203,7 +203,7 @@ int crossrefIndice(std::vector<Token>& program){
 					index++;
 				}
 				if(!flag){
-					printerr("ELSE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< "0");
+					printerr("ELSE block should always end with `END` at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< "0");
 					exit(1);
 				}
 				break;
@@ -262,7 +262,7 @@ int crossrefIndice(std::vector<Token>& program){
 					index++;
 				}
 				if(!flag){
-					printerr("WHILE block should always end with END! at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< ")");
+					printerr("WHILE block should always end with `END` at line(" << token.position[0] + 1 << "," <<token.position[1] - 1<< ")");
 					exit(1);
 				}
 				break;
@@ -396,8 +396,8 @@ std::vector<Token> parseLine(std::string line, int row){
 
 			Token res = parse(token, row, i);
 
-			//TODO: add bound check and other check nessesary in macro
-			//TODO: ad multiline macro
+			//TODO: add bound check and other check necessary in macro
+			//TODO: add multi-line macro
 			if (res.type == KEYWORD && res.value == MACRO){
 
 				std::string mac_word = "";
@@ -473,7 +473,7 @@ void execute(std::vector<Token> program){
 		if (token.type == STRING){
 			stack.push_back(token.value);
 			//TODO: implement string operations
-			assert(false && "String is stil unimplemented");
+			assert(false && "String is still unimplemented");
 		}
 		if (token.type == KEYWORD){
 			switch(token.value){
@@ -630,10 +630,10 @@ void execute(std::vector<Token> program){
 					}
 				case MACRO:
 					{
-						assert(false && "unimplemented");	
+						assert(false && "unexpectedly encountered macro!");	
 					}
 				default:
-					assert(false && "Undeteced invalid token found!");
+					assert(false && "Undetected invalid token found!");
 					exit(1);
 					break;
 			}	
@@ -978,7 +978,7 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	std::vector<Token> program; // program stores all tokens to evalute for interpreting or compilation
+	std::vector<Token> program; // program stores all tokens to evaluate for interpreting or compilation
 	
 	std::ifstream file(filename);
 	if (!file.is_open()) { 
